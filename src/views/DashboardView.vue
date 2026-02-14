@@ -36,8 +36,8 @@
               <div>
                 <p class="font-medium text-text-primary">{{ member.name }}</p>
                 <p class="text-xs text-text-tertiary">
-                  收入 ¥{{ formatMoney(incomeStats.byUser[member.name] || 0) }} · 
-                  支出 ¥{{ formatMoney(expenseStats.byUser[member.name] || 0) }}
+                  收入 ¥{{ formatMoney(getMemberIncome(member.name)) }} · 
+                  支出 ¥{{ formatMoney(getMemberExpense(member.name)) }}
                 </p>
               </div>
             </div>
@@ -202,13 +202,18 @@ function formatMoney(amount) {
   return Math.round(amount).toLocaleString()
 }
 
+function getMemberIncome(memberName) {
+  const stats = incomeStore.getMonthlyStats(currentMonth.value)
+  return (stats && stats.byUser) ? stats.byUser[memberName] || 0 : 0
+}
+
+function getMemberExpense(memberName) {
+  const stats = expenseStore.getMonthlyStats(currentMonth.value)
+  return (stats && stats.byUser) ? stats.byUser[memberName] || 0 : 0
+}
+
 function getMemberBalance(memberName) {
-  // 使用组件顶部已创建的 store 实例
-  const incomeStats = incomeStore.getMonthlyStats(currentMonth.value)
-  const expenseStats = expenseStore.getMonthlyStats(currentMonth.value)
-  const income = (incomeStats && incomeStats.byUser) ? incomeStats.byUser[memberName] || 0 : 0
-  const expense = (expenseStats && expenseStats.byUser) ? expenseStats.byUser[memberName] || 0 : 0
-  return income - expense
+  return getMemberIncome(memberName) - getMemberExpense(memberName)
 }
 
 function getProgress(goalId) {
