@@ -84,6 +84,9 @@ export const db = {
   // 添加记录
   async add(storeName, data) {
     const db = await getDB()
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data for add operation')
+    }
     return db.add(storeName, data)
   },
   

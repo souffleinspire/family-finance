@@ -38,13 +38,18 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error('用户名已存在')
     }
     
+    const userId = uuidv4()
+    console.log('Generated user ID:', userId)
+    
     const user = {
-      id: uuidv4(),
+      id: userId,
       name,
       passwordHash: hashPassword(password),
       createdAt: new Date().toISOString(),
       lastSyncAt: null
     }
+    
+    console.log('Attempting to add user:', JSON.stringify(user))
     
     await db.add('users', user)
     users.value = allUsers.concat(user)  // 更新本地缓存
