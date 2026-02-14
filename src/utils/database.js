@@ -1,7 +1,7 @@
 import { openDB } from 'idb'
 
 const DB_NAME = 'family-finance-db'
-const DB_VERSION = 1
+const DB_VERSION = 2  // 增加到版本2，强制重新创建schema
 
 let dbPromise = null
 
@@ -54,7 +54,7 @@ export function getDB() {
         
         // 目标表
         if (!db.objectStoreNames.contains('goals')) {
-          const goalStore = db.createObjectStore('goals', { keyPin: 'id' })
+          const goalStore = db.createObjectStore('goals', { keyPath: 'id' })
           goalStore.createIndex('status', 'status', { unique: false })
         }
         
