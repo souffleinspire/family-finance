@@ -3,12 +3,7 @@
     <!-- 顶部导航 -->
     <header class="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-lg safe-top">
       <div class="flex items-center justify-between px-6 py-4">
-        <router-link to="/" class="p-2 -ml-2 rounded-full hover:bg-bg-secondary">
-          <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </router-link>
-        <h1 class="text-xl font-semibold text-text-primary">数据同步</h1>
+        <h1 class="text-xl font-semibold text-text-primary">保险</h1>
         <div class="w-10"></div>
       </div>
     </header>
@@ -23,61 +18,112 @@
             </svg>
           </div>
           <div>
-            <h3 class="font-medium text-text-primary mb-1">离线同步</h3>
+            <h3 class="font-medium text-text-primary mb-1">保险管理</h3>
             <p class="text-sm text-text-secondary">
-              由于是本地存储，你需要导出数据文件发送给家人，家人导入后即可同步。
+              记录和管理家庭保险信息，随时查看保障情况。
             </p>
           </div>
         </div>
       </div>
       
-      <!-- 导出 -->
+      <!-- 保险列表 -->
       <div class="card">
-        <h2 class="text-lg font-medium text-text-primary mb-4">📤 导出数据</h2>
+        <h2 class="text-lg font-medium text-text-primary mb-4">我的保险</h2>
         <p class="text-sm text-text-tertiary mb-4">
-          生成包含所有记账数据的 JSON 文件，发送给家人进行同步。
+          添加和管理家庭保险保单。
         </p>
-        <button 
-          @click="handleExport"
-          :disabled="exporting"
-          class="btn-primary w-full"
-        >
-          {{ exporting ? '导出中...' : '导出数据文件' }}
+        <button @click="showAddModal = true" class="btn-primary w-full">
+          添加保险
         </button>
       </div>
       
-      <!-- 导入 -->
+      <!-- 保险类型统计 -->
       <div class="card">
-        <h2 class="text-lg font-medium text-text-primary mb-4">📥 导入数据</h2>
-        <p class="text-sm text-text-tertiary mb-4">
-          选择家人发送的 JSON 文件，合并到本地数据。
+        <h2 class="text-lg font-medium text-text-primary mb-4">保障概览</h2>
+        <p class="text-sm text-text-tertiary">
+          暂无保险数据，点击上方添加保险保单。
         </p>
-        
-        <input 
-          ref="fileInput"
-          type="file" 
-          accept=".json" 
-          class="hidden"
-          @change="handleFileSelect"
-        />
-        
-        <button 
-          @click="$refs.fileInput.click()"
-          :disabled="importing"
-          class="btn-secondary w-full"
-        >
-          {{ importing ? '导入中...' : '选择文件导入' }}
-        </button>
       </div>
-      
-      <!-- 备份 -->
-      <div class="card">
-        <h2 class="text-lg font-medium text-text-primary mb-4">💾 数据备份</h2>
-        <p class="text-sm text-text-tertiary mb-4">
-          创建完整备份，防止数据丢失。
-        </p>
-        <button 
-          @click="handleBackup"
+    </main>
+    
+    <!-- 添加保险弹窗 -->
+    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/30">
+      <div class="w-full max-w-md bg-bg-tertiary rounded-2xl shadow-soft-lg p-6">
+        <h2 class="text-xl font-semibold text-text-primary mb-6">添加保险</h2>
+        
+        <form @submit.prevent="handleAdd" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">保险名称</label>
+            <input v-model="form.name" type="text" class="input" placeholder="例如：平安福、重疾险" required />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">保险类型</label>
+            <select v-model="form.type" class="input" required>
+              <option value="">请选择</option>
+              <option value="重疾险">重疾险</option>
+              <option value="医疗险">医疗险</option>
+              <option value="意外险">意外险</option>
+              <option value="寿险">寿险</option>
+              <option value="车险">车险</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">保额</label>
+            <input v-model.number="form.coverage" type="number" class="input" placeholder="500000" />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">年缴保费</label>
+            <input v-model.number="form.premium" type="number" class="input" placeholder="10000" />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">投保人</label>
+            <input v-model="form.holder" type="text" class="input" placeholder="家庭成员姓名" />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">到期日期</label>
+            <input v-model="form.expiryDate" type="date" class="input" />
+          </div>
+          
+          <div class="flex gap-3 pt-4">
+            <button type="button" @click="showAddModal = false" class="btn-secondary flex-1">取消</button>
+            <button type="submit" class="btn-primary flex-1">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const showAddModal = ref(false)
+const form = reactive({
+  name: '',
+  type: '',
+  coverage: null,
+  premium: null,
+  holder: '',
+  expiryDate: ''
+})
+
+function handleAdd() {
+  console.log('添加保险:', form)
+  showAddModal.value = false
+}
+
+onMounted(() => {
+  authStore.init()
+})
+</script>
           :disabled="backingUp"
           class="btn-secondary w-full"
         >

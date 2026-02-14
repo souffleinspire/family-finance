@@ -3,11 +3,6 @@
     <!-- 顶部导航 -->
     <header class="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-lg safe-top">
       <div class="flex items-center justify-between px-6 py-4">
-        <router-link to="/" class="p-2 -ml-2 rounded-full hover:bg-bg-secondary">
-          <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </router-link>
         <h1 class="text-xl font-semibold text-text-primary">财务目标</h1>
         <button @click="showAddModal = true" class="p-2 rounded-full bg-primary text-white">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

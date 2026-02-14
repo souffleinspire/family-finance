@@ -26,36 +26,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/expenses/add',
-    name: 'AddExpense',
-    component: () => import('@/views/AddExpenseView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/incomes',
-    name: 'Incomes',
-    component: () => import('@/views/IncomesView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/incomes/add',
-    name: 'AddIncome',
-    component: () => import('@/views/AddIncomeView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/assets',
-    name: 'Assets',
-    component: () => import('@/views/AssetsView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/assets/add',
-    name: 'AddAsset',
-    component: () => import('@/views/AddAssetView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/goals',
     name: 'Goals',
     component: () => import('@/views/GoalsView.vue'),

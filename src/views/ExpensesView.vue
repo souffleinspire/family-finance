@@ -3,13 +3,8 @@
     <!-- 顶部导航 -->
     <header class="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-lg safe-top">
       <div class="flex items-center justify-between px-6 py-4">
-        <router-link to="/" class="p-2 -ml-2 rounded-full hover:bg-bg-secondary">
-          <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </router-link>
-        <h1 class="text-xl font-semibold text-text-primary">支出记录</h1>
-        <button @click="showAddModal = true" class="p-2 rounded-full bg-primary text-white">
+        <h1 class="text-xl font-semibold text-text-primary">收入支出</h1>
+        <button @click="showAddModal = true; addType = 'expense'" class="p-2 rounded-full bg-primary text-white">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -17,24 +12,9 @@
       </div>
     </header>
     
-    <main class="px-6 py-6">
-      <!-- 月份选择 -->
-      <div class="flex items-center justify-between mb-6">
-        <button @click="changeMonth(-1)" class="p-2 rounded-full hover:bg-bg-secondary">
-          <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <span class="text-lg font-medium text-text-primary">{{ currentMonth }}</span>
-        <button @click="changeMonth(1)" class="p-2 rounded-full hover:bg-bg-secondary">
-          <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-      
+    <main class="px-6 py-6 space-y-6">
       <!-- 本月概览 -->
-      <div class="card mb-6">
+      <div class="card">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-medium text-text-primary">本月概览</h2>
         </div>
@@ -47,12 +27,12 @@
           </div>
           <div class="text-center">
             <p class="text-sm text-text-tertiary mb-1">支出</p>
-            <p class="text-lg font-semibold text-accent">¥{{ formatMoney(monthStats.total) }}</p>
+            <p class="text-lg font-semibold text-accent">¥{{ formatMoney(expenseStats.total) }}</p>
           </div>
           <div class="text-center">
             <p class="text-sm text-text-tertiary mb-1">结余</p>
-            <p class="text-lg font-semibold" :class="incomeStats.total - monthStats.total >= 0 ? 'text-primary' : 'text-accent'">
-              ¥{{ formatMoney(incomeStats.total - monthStats.total) }}
+            <p class="text-lg font-semibold" :class="balance >= 0 ? 'text-primary' : 'text-accent'">
+              ¥{{ formatMoney(balance) }}
             </p>
           </div>
         </div>
@@ -72,10 +52,28 @@
         </div>
       </div>
       
-      <!-- 按类型分组 -->
-      <div class="space-y-4">
+      <!-- 收入/支出切换 -->
+      <div class="flex gap-2">
+        <button 
+          @click="activeTab = 'expense'"
+          class="flex-1 py-3 rounded-xl text-sm font-medium transition-colors"
+          :class="activeTab === 'expense' ? 'bg-accent text-white' : 'bg-bg-secondary text-text-secondary'"
+        >
+          支出明细
+        </button>
+        <button 
+          @click="activeTab = 'income'"
+          class="flex-1 py-3 rounded-xl text-sm font-medium transition-colors"
+          :class="activeTab === 'income' ? 'bg-primary text-white' : 'bg-bg-secondary text-text-secondary'"
+        >
+          收入明细
+        </button>
+      </div>
+      
+      <!-- 支出明细 -->
+      <div v-if="activeTab === 'expense'" class="space-y-4">
         <div 
-          v-for="(amount, type) in monthStats.byType" 
+          v-for="(amount, type) in expenseStats.byType" 
           :key="type"
           class="card"
         >
@@ -89,7 +87,6 @@
             <span class="font-medium text-accent">¥{{ formatMoney(amount) }}</span>
           </div>
           
-          <!-- 该类型的明细 -->
           <div class="space-y-2">
             <div 
               v-for="expense in getExpensesByType(type)" 
@@ -104,22 +101,56 @@
             </div>
           </div>
         </div>
+        
+        <div v-if="Object.keys(expenseStats.byType).length === 0" class="text-center py-12">
+          <p class="text-text-tertiary">本月还没有支出记录</p>
+        </div>
       </div>
       
-      <div v-if="Object.keys(monthStats.byType).length === 0" class="text-center py-12">
-        <p class="text-text-tertiary">本月还没有支出记录</p>
-        <button @click="showAddModal = true" class="mt-4 btn-primary">
-          去记账
-        </button>
+      <!-- 收入明细 -->
+      <div v-if="activeTab === 'income'" class="space-y-4">
+        <div 
+          v-for="(amount, source) in incomeStats.bySource" 
+          :key="source"
+          class="card"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                <span class="text-primary text-sm">收</span>
+              </div>
+              <span class="font-medium text-text-primary">{{ source }}</span>
+            </div>
+            <span class="font-medium text-primary">¥{{ formatMoney(amount) }}</span>
+          </div>
+          
+          <div class="space-y-2">
+            <div 
+              v-for="income in getIncomesBySource(source)" 
+              :key="income.id"
+              class="flex items-center justify-between py-2 border-t border-border-light"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-text-tertiary">{{ income.date.slice(-5) }}</span>
+                <span class="text-sm text-text-secondary">{{ income.userName }}</span>
+              </div>
+              <span class="text-sm text-text-primary">¥{{ formatMoney(income.amount) }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="Object.keys(incomeStats.bySource).length === 0" class="text-center py-12">
+          <p class="text-text-tertiary">本月还没有收入记录</p>
+        </div>
       </div>
     </main>
     
-    <!-- 添加支出弹窗 -->
+    <!-- 添加弹窗 -->
     <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/30">
       <div class="w-full max-w-md bg-bg-tertiary rounded-2xl shadow-soft-lg p-6 animate-scale-in">
-        <h2 class="text-xl font-semibold text-text-primary mb-6">记一笔支出</h2>
+        <h2 class="text-xl font-semibold text-text-primary mb-6">{{ addType === 'expense' ? '记一笔支出' : '记一笔收入' }}</h2>
         
-        <form @submit.prevent="handleAddExpense" class="space-y-4">
+        <form @submit.prevent="handleAdd" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-text-secondary mb-2">金额</label>
             <input 
@@ -132,27 +163,24 @@
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-text-secondary mb-2">类型</label>
+            <label class="block text-sm font-medium text-text-secondary mb-2">{{ addType === 'expense' ? '类型' : '来源' }}</label>
             <input 
               v-model="form.type"
               type="text" 
               class="input"
-              placeholder="餐饮、交通、购物..."
-              list="expense-types"
+              :placeholder="addType === 'expense' ? '餐饮、交通、购物...' : '工资、投资、兼职...'"
+              :list="addType === 'expense' ? 'expense-types' : 'income-sources'"
               required
             />
-            <datalist id="expense-types">
-              <option value="餐饮" />
-              <option value="交通" />
-              <option value="购物" />
-              <option value="娱乐" />
-              <option value="生活" />
-              <option value="房租" />
-              <option value="保险" />
-              <option value="人情" />
-              <option value="旅游" />
-              <option value="爱好" />
-              <option value="备用" />
+            <datalist v-if="addType === 'expense'" id="expense-types">
+              <option value="餐饮" /><option value="交通" /><option value="购物" />
+              <option value="娱乐" /><option value="生活" /><option value="房租" />
+              <option value="保险" /><option value="人情" /><option value="旅游" />
+              <option value="爱好" /><option value="备用" />
+            </datalist>
+            <datalist v-else id="income-sources">
+              <option value="工资" /><option value="奖金" /><option value="投资" />
+              <option value="兼职" /><option value="红包" /><option value="其他" />
             </datalist>
           </div>
           
@@ -177,12 +205,8 @@
           </div>
           
           <div class="flex gap-3 pt-4">
-            <button type="button" @click="showAddModal = false" class="btn-secondary flex-1">
-              取消
-            </button>
-            <button type="submit" class="btn-accent flex-1">
-              保存
-            </button>
+            <button type="button" @click="showAddModal = false" class="btn-secondary flex-1">取消</button>
+            <button type="submit" class="btn-primary flex-1">保存</button>
           </div>
         </form>
       </div>
@@ -192,7 +216,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { format, subMonths, addMonths } from 'date-fns'
+import { format } from 'date-fns'
 import { useExpenseStore } from '@/stores/expenses'
 import { useIncomeStore } from '@/stores/incomes'
 import { useAuthStore } from '@/stores/auth'
@@ -202,7 +226,9 @@ const incomeStore = useIncomeStore()
 const authStore = useAuthStore()
 
 const currentMonth = ref(format(new Date(), 'yyyy-MM'))
+const activeTab = ref('expense')
 const showAddModal = ref(false)
+const addType = ref('expense')
 
 const form = reactive({
   amount: '',
@@ -211,33 +237,10 @@ const form = reactive({
   notes: ''
 })
 
-const monthStats = computed(() => {
-  return expenseStore.getMonthlyStats(currentMonth.value)
-})
-
-const incomeStats = computed(() => {
-  return incomeStore.getMonthlyStats(currentMonth.value)
-})
-
-const balance = computed(() => {
-  return incomeStats.value.total - monthStats.value.total
-})
-
-const savingsRate = computed(() => {
-  if (incomeStats.value.total === 0) return 0
-  return (balance.value / incomeStats.value.total) * 100
-})
-
-const avgAmount = computed(() => {
-  if (monthStats.value.count === 0) return 0
-  return monthStats.value.total / monthStats.value.count
-})
-
-function changeMonth(delta) {
-  const date = new Date(currentMonth.value + '-01')
-  date.setMonth(date.getMonth() + delta)
-  currentMonth.value = format(date, 'yyyy-MM')
-}
+const expenseStats = computed(() => expenseStore.getMonthlyStats(currentMonth.value))
+const incomeStats = computed(() => incomeStore.getMonthlyStats(currentMonth.value))
+const balance = computed(() => incomeStats.value.total - expenseStats.value.total)
+const savingsRate = computed(() => incomeStats.value.total > 0 ? (balance.value / incomeStats.value.total) * 100 : 0)
 
 function getExpensesByType(type) {
   return expenseStore.expenses
@@ -245,23 +248,39 @@ function getExpensesByType(type) {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
 }
 
+function getIncomesBySource(source) {
+  return incomeStore.incomes
+    .filter(i => i.date.startsWith(currentMonth.value) && i.source === source)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+}
+
 function formatMoney(amount) {
   return Math.round(amount).toLocaleString()
 }
 
-async function handleAddExpense() {
+async function handleAdd() {
   if (!authStore.currentUser) return
   
-  await expenseStore.addExpense({
-    userId: authStore.currentUser.id,
-    userName: authStore.currentUser.name,
-    amount: form.amount,
-    type: form.type,
-    date: form.date,
-    notes: form.notes
-  })
+  if (addType.value === 'expense') {
+    await expenseStore.addExpense({
+      userId: authStore.currentUser.id,
+      userName: authStore.currentUser.name,
+      amount: form.amount,
+      type: form.type,
+      date: form.date,
+      notes: form.notes
+    })
+  } else {
+    await incomeStore.addIncome({
+      userId: authStore.currentUser.id,
+      userName: authStore.currentUser.name,
+      amount: form.amount,
+      source: form.type,
+      date: form.date,
+      notes: form.notes
+    })
+  }
   
-  // 重置表单
   form.amount = ''
   form.type = ''
   form.notes = ''
@@ -269,9 +288,6 @@ async function handleAddExpense() {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    expenseStore.init(),
-    incomeStore.init()
-  ])
+  await Promise.all([expenseStore.init(), incomeStore.init()])
 })
 </script>
