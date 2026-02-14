@@ -203,11 +203,11 @@ function formatMoney(amount) {
 }
 
 function getMemberBalance(memberName) {
-  // 家庭成员卡片需要获取收入和支出统计
-  const incomeStore = useIncomeStore()
-  const expenseStore = useExpenseStore()
-  const income = incomeStore.getMonthlyStats(currentMonth.value).byUser[memberName] || 0
-  const expense = expenseStore.getMonthlyStats(currentMonth.value).byUser[memberName] || 0
+  // 使用组件顶部已创建的 store 实例
+  const incomeStats = incomeStore.getMonthlyStats(currentMonth.value)
+  const expenseStats = expenseStore.getMonthlyStats(currentMonth.value)
+  const income = (incomeStats && incomeStats.byUser) ? incomeStats.byUser[memberName] || 0 : 0
+  const expense = (expenseStats && expenseStats.byUser) ? expenseStats.byUser[memberName] || 0 : 0
   return income - expense
 }
 
