@@ -54,6 +54,14 @@ export const useIncomeStore = defineStore('incomes', () => {
     const monthIncomes = getIncomesByMonth(yearMonth)
     const total = monthIncomes.reduce((sum, i) => sum + i.amount, 0)
     
+    const bySource = {}
+    monthIncomes.forEach(i => {
+      if (!bySource[i.source]) {
+        bySource[i.source] = 0
+      }
+      bySource[i.source] += i.amount
+    })
+    
     const byUser = {}
     monthIncomes.forEach(i => {
       if (!byUser[i.userName]) {
@@ -62,7 +70,7 @@ export const useIncomeStore = defineStore('incomes', () => {
       byUser[i.userName] += i.amount
     })
     
-    return { total, byUser, count: monthIncomes.length }
+    return { total, bySource, byUser, count: monthIncomes.length }
   }
   
   return {

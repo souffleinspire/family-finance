@@ -4,42 +4,11 @@
     <header class="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-lg safe-top">
       <div class="flex items-center justify-between px-6 py-4">
         <h1 class="text-xl font-semibold text-text-primary">财务目标</h1>
-        <button @click="showAddModal = true" class="p-2 rounded-full bg-primary text-white">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
+        <div class="w-10"></div>
       </div>
     </header>
     
     <main class="px-6 py-6 space-y-6">
-      <!-- 2026年预算概览 -->
-      <div class="card">
-        <h2 class="text-lg font-medium text-text-primary mb-4">2026年预算</h2>
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div class="text-center p-4 rounded-xl bg-bg-secondary">
-            <p class="text-sm text-text-tertiary">年度预算</p>
-            <p class="text-xl font-semibold text-text-primary">¥{{ formatMoney(totalBudget) }}</p>
-          </div>
-          <div class="text-center p-4 rounded-xl bg-bg-secondary">
-            <p class="text-sm text-text-tertiary">月均预算</p>
-            <p class="text-xl font-semibold text-text-primary">¥{{ formatMoney(monthlyBudget) }}</p>
-          </div>
-        </div>
-        
-        <!-- 预算类型列表 -->
-        <div class="space-y-3">
-          <div 
-            v-for="(item, type) in budgetConfig.expenses" 
-            :key="type"
-            class="flex items-center justify-between p-3 rounded-xl bg-bg-secondary"
-          >
-            <span class="text-text-primary">{{ type }}</span>
-            <span class="text-text-secondary">¥{{ formatMoney(item.monthly) }}/月</span>
-          </div>
-        </div>
-      </div>
-      
       <!-- 储蓄目标 -->
       <div class="card">
         <h2 class="text-lg font-medium text-text-primary mb-4">储蓄目标</h2>
