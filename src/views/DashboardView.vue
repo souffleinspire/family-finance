@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen pb-24">
+  <div v-if="loading" class="min-h-screen flex items-center justify-center">
+    <p class="text-text-tertiary">加载中...</p>
+  </div>
+  <div v-else class="min-h-screen pb-24">
     <!-- 顶部导航 -->
     <header class="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-lg safe-top">
       <div class="flex items-center justify-between px-6 py-4">
@@ -220,6 +223,7 @@ const expenseStore = useExpenseStore()
 const incomeStore = useIncomeStore()
 const goalStore = useGoalStore()
 
+const loading = ref(true)
 const currentMonth = ref('2026-02')
 
 const formattedDate = computed(() => {
@@ -272,9 +276,15 @@ function getProgress(goalId) {
 }
 
 onMounted(async () => {
-  await authStore.init()
-  await expenseStore.init()
-  await incomeStore.init()
-  await goalStore.init()
+  try {
+    await Promise.all([
+      authStore.init(),
+      expenseStore.init(),
+      incomeStore.init(),
+      goalStore.init()
+    ])
+  } finally {
+    loading.value = false
+  }
 })
 </script>
