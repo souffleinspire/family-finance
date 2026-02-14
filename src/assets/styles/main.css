@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply bg-bg-primary text-text-primary antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  
+  /* 隐藏滚动条但保留功能 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  /* 卡片样式 */
+  .card {
+    @apply bg-bg-tertiary rounded-card shadow-soft p-6;
+  }
+  
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-soft-hover hover:-translate-y-1;
+  }
+  
+  /* 按钮样式 */
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white rounded-button font-medium
+           transition-all duration-200 hover:bg-primary-dark active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-bg-secondary text-text-primary rounded-button font-medium
+           transition-all duration-200 hover:bg-border-light active:scale-95;
+  }
+  
+  .btn-accent {
+    @apply px-6 py-3 bg-accent text-white rounded-button font-medium
+           transition-all duration-200 hover:bg-accent-dark active:scale-95;
+  }
+  
+  /* 输入框样式 */
+  .input {
+    @apply w-full px-4 py-3 bg-bg-secondary rounded-button 
+           border border-transparent transition-all duration-200
+           focus:outline-none focus:border-primary focus:bg-white;
+  }
+  
+  /* 标签样式 */
+  .tag {
+    @apply inline-flex items-center px-3 py-1 rounded-tag text-sm font-medium;
+  }
+  
+  /* 渐变背景 */
+  .gradient-primary {
+    background: linear-gradient(135deg, #A8C9B4 0%, #7BA58F 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, #E8C4BE 0%, #D4A59A 100%);
+  }
+}
+
+@layer utilities {
+  /* 安全区域适配 */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
