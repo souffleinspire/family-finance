@@ -4,11 +4,19 @@
     <header class="sticky top-0 z-10 bg-bg-primary/80 backdrop-blur-lg safe-top">
       <div class="flex items-center justify-between px-6 py-4">
         <h1 class="text-xl font-semibold text-text-primary">收入支出</h1>
-        <button @click="showAddModal = true; addType = 'expense'" class="p-2 rounded-full bg-primary text-white">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- 预算入口 -->
+          <router-link to="/goals" class="p-2 rounded-full bg-bg-secondary text-text-secondary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </router-link>
+          <button @click="showAddModal = true; addType = 'expense'" class="p-2 rounded-full bg-primary text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
     

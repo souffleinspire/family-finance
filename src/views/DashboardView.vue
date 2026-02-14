@@ -86,6 +86,16 @@
         </router-link>
       </div>
     </nav>
+    
+    <!-- 浮动添加按钮 -->
+    <router-link 
+      to="/assets/add" 
+      class="fixed bottom-20 right-6 w-14 h-14 rounded-full gradient-accent flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+    >
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+    </router-link>
   </div>
 </template>
 
