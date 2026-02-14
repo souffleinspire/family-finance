@@ -20,70 +20,6 @@
     </header>
     
     <main class="px-6 py-6 space-y-6">
-      <!-- 家庭成员 -->
-      <div class="card">
-        <h2 class="text-lg font-medium text-text-primary mb-4">家庭成员</h2>
-        <div class="space-y-3">
-          <div 
-            v-for="member in familyMembers" 
-            :key="member.id"
-            class="flex items-center justify-between p-4 rounded-xl bg-bg-secondary"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span class="text-primary font-medium">{{ member.name.charAt(0) }}</span>
-              </div>
-              <div>
-                <p class="font-medium text-text-primary">{{ member.name }}</p>
-                <p class="text-xs text-text-tertiary">
-                  收入 ¥{{ formatMoney(getMemberIncome(member.name)) }} · 
-                  支出 ¥{{ formatMoney(getMemberExpense(member.name)) }}
-                </p>
-              </div>
-            </div>
-            <div class="text-right">
-              <p class="text-sm font-medium" :class="getMemberBalance(member.name) >= 0 ? 'text-primary' : 'text-accent'">
-                {{ getMemberBalance(member.name) >= 0 ? '+' : '' }}¥{{ formatMoney(getMemberBalance(member.name)) }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 目标进度 -->
-      <div class="card">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium text-text-primary">目标进度</h2>
-          <router-link to="/goals" class="text-sm text-primary hover:text-primary-dark">
-            查看全部 →
-          </router-link>
-        </div>
-        
-        <div class="space-y-4">
-          <div 
-            v-for="goal in activeGoals.slice(0, 2)" 
-            :key="goal.id"
-            class="p-4 rounded-xl bg-bg-secondary"
-          >
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-medium text-text-primary">{{ goal.name }}</span>
-              <span class="text-sm text-text-tertiary">
-                {{ (getProgress(goal.id) * 100).toFixed(0) }}%
-              </span>
-            </div>
-            <div class="w-full h-2 bg-border-light rounded-full overflow-hidden">
-              <div 
-                class="h-full bg-primary rounded-full transition-all duration-500"
-                :style="{ width: `${getProgress(goal.id) * 100}%` }"
-              ></div>
-            </div>
-            <p class="mt-2 text-sm text-text-tertiary">
-              ¥{{ formatMoney(goal.currentAmount) }} / ¥{{ formatMoney(goal.targetAmount) }}
-            </p>
-          </div>
-        </div>
-      </div>
-      
       <!-- 最近记录 -->
       <div class="card">
         <div class="flex items-center justify-between mb-4">
@@ -159,27 +95,14 @@ import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useExpenseStore } from '@/stores/expenses'
-import { useIncomeStore } from '@/stores/incomes'
-import { useGoalStore } from '@/stores/goals'
 
 const authStore = useAuthStore()
 const expenseStore = useExpenseStore()
-const incomeStore = useIncomeStore()
-const goalStore = useGoalStore()
 
 const loading = ref(true)
-const currentMonth = ref('2026-02')
 
 const formattedDate = computed(() => {
   return format(new Date(), 'yyyy年M月d日 EEEE', { locale: zhCN })
-})
-
-const familyMembers = computed(() => {
-  return authStore.getAllUsers()
-})
-
-const activeGoals = computed(() => {
-  return goalStore.activeGoals
 })
 
 const recentExpenses = computed(() => {
@@ -192,31 +115,11 @@ function formatMoney(amount) {
   return Math.round(amount).toLocaleString()
 }
 
-function getMemberIncome(memberName) {
-  const stats = incomeStore.getMonthlyStats(currentMonth.value)
-  return (stats && stats.byUser) ? stats.byUser[memberName] || 0 : 0
-}
-
-function getMemberExpense(memberName) {
-  const stats = expenseStore.getMonthlyStats(currentMonth.value)
-  return (stats && stats.byUser) ? stats.byUser[memberName] || 0 : 0
-}
-
-function getMemberBalance(memberName) {
-  return getMemberIncome(memberName) - getMemberExpense(memberName)
-}
-
-function getProgress(goalId) {
-  return goalStore.getProgress(goalId)
-}
-
 onMounted(async () => {
   try {
     await Promise.all([
       authStore.init(),
-      expenseStore.init(),
-      incomeStore.init(),
-      goalStore.init()
+      expenseStore.init()
     ])
   } finally {
     loading.value = false
