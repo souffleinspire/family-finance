@@ -5,13 +5,15 @@ import App from './App.vue'
 import { useAuthStore } from '@/stores/auth'
 import './assets/styles/main.css'
 
-// 初始化认证状态（确保路由守卫能正确获取用户数据）
-const authStore = useAuthStore()
-authStore.init()
+// 确保认证初始化完成后再启动应用
+async function startApp() {
+  const authStore = useAuthStore()
+  await authStore.init()
+  
+  const app = createApp(App)
+  app.use(createPinia())
+  app.use(router)
+  app.mount('#app')
+}
 
-const app = createApp(App)
-
-app.use(createPinia())
-app.use(router)
-
-app.mount('#app')
+startApp()
