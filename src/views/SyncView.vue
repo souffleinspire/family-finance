@@ -9,12 +9,12 @@
     </header>
     
     <main class="px-6 py-6 space-y-6">
-      <!-- 同步说明 -->
+      <!-- 说明 -->
       <div class="card bg-primary/5 border border-primary/20">
         <div class="flex items-start gap-4">
           <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
           <div>
@@ -37,7 +37,7 @@
         </button>
       </div>
       
-      <!-- 保险类型统计 -->
+      <!-- 保障概览 -->
       <div class="card">
         <h2 class="text-lg font-medium text-text-primary mb-4">保障概览</h2>
         <p class="text-sm text-text-tertiary">
@@ -122,159 +122,5 @@ function handleAdd() {
 
 onMounted(() => {
   authStore.init()
-})
-</script>
-          :disabled="backingUp"
-          class="btn-secondary w-full"
-        >
-          {{ backingUp ? '备份中...' : '创建备份' }}
-        </button>
-      </div>
-      
-      <!-- 同步历史 -->
-      <div class="card">
-        <h2 class="text-lg font-medium text-text-primary mb-4">📋 同步历史</h2>
-        
-        <div v-if="syncHistory.length === 0" class="text-center py-8">
-          <p class="text-text-tertiary">还没有同步记录</p>
-        </div>
-        
-        <div v-else class="space-y-3">
-          <div 
-            v-for="record in syncHistory" 
-            :key="record.id"
-            class="flex items-center justify-between p-3 rounded-xl bg-bg-secondary"
-          >
-            <div class="flex items-center gap-3">
-              <div 
-                class="w-8 h-8 rounded-lg flex items-center justify-center"
-                :class="record.type === 'export' ? 'bg-primary/20' : 'bg-accent/20'"
-              >
-                <span v-if="record.type === 'export'" class="text-primary">📤</span>
-                <span v-else class="text-accent">📥</span>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-text-primary">
-                  {{ record.type === 'export' ? '导出' : '导入' }}
-                </p>
-                <p class="text-xs text-text-tertiary">
-                  {{ formatDate(record.timestamp) }}
-                </p>
-              </div>
-            </div>
-            <span 
-              class="text-xs px-2 py-1 rounded-full"
-              :class="record.status === 'success' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'"
-            >
-              {{ record.status === 'success' ? '成功' : '部分' }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted } from 'vue'
-import { format } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
-import { useAuthStore } from '@/stores/auth'
-import { syncManager } from '@/utils/sync'
-import { backupManager } from '@/utils/backup'
-
-const authStore = useAuthStore()
-
-const exporting = ref(false)
-const importing = ref(false)
-const backingUp = ref(false)
-const syncHistory = ref([])
-
-async function handleExport() {
-  exporting.value = true
-  
-  try {
-    syncManager.setUser(authStore.currentUser)
-    const data = await syncManager.exportData()
-    
-    // 下载文件
-    const jsonStr = JSON.stringify(data, null, 2)
-    const blob = new Blob([jsonStr], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `family-finance-sync-${format(new Date(), 'yyyy-MM-dd')}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    
-    await loadSyncHistory()
-  } catch (error) {
-    console.error('Export failed:', error)
-    alert('导出失败：' + error.message)
-  } finally {
-    exporting.value = false
-  }
-}
-
-async function handleFileSelect(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  importing.value = true
-  
-  try {
-    const data = await backupManager.parseBackupFile(file)
-    
-    // 确认导入
-    if (!confirm('确定要导入数据吗？现有数据将与导入的数据合并。')) {
-      return
-    }
-    
-    syncManager.setUser(authStore.currentUser)
-    const result = await syncManager.importData(data)
-    
-    if (result.success) {
-      alert(`导入成功！\n新增记录：${result.result.expenses.added + result.result.incomes.added + result.result.assets.added}`)
-      await loadSyncHistory()
-    } else {
-      alert('导入失败：' + result.error)
-    }
-  } catch (error) {
-    console.error('Import failed:', error)
-    alert('导入失败：' + error.message)
-  } finally {
-    importing.value = false
-    event.target.value = ''
-  }
-}
-
-async function handleBackup() {
-  backingUp.value = true
-  
-  try {
-    const data = await backupManager.createBackup()
-    backupManager.downloadBackup(data)
-    alert('备份创建成功！')
-  } catch (error) {
-    console.error('Backup failed:', error)
-    alert('备份失败：' + error.message)
-  } finally {
-    backingUp.value = false
-  }
-}
-
-async function loadSyncHistory() {
-  syncHistory.value = await syncManager.getSyncHistory()
-}
-
-function formatDate(dateStr) {
-  return format(new Date(dateStr), 'yyyy-MM-dd HH:mm', { locale: zhCN })
-}
-
-onMounted(async () => {
-  await authStore.init()
-  await loadSyncHistory()
 })
 </script>
