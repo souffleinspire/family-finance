@@ -109,38 +109,39 @@
       </div>
       
       <!-- 收入明细 -->
-      <div v-if="activeTab === 'income'" class="space-y-4">
-        <div 
-          v-for="(amount, source) in incomeStats.bySource" 
-          :key="source"
-          class="card"
-        >
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <span class="text-primary text-sm">收</span>
+      <div v-show="activeTab === 'income'" class="space-y-4">
+        <template v-if="incomeStats && incomeStats.bySource && Object.keys(incomeStats.bySource).length > 0">
+          <div 
+            v-for="(amount, source) in incomeStats.bySource" 
+            :key="source"
+            class="card"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <span class="text-primary text-sm">收</span>
+                </div>
+                <span class="font-medium text-text-primary">{{ source }}</span>
               </div>
-              <span class="font-medium text-text-primary">{{ source }}</span>
+              <span class="font-medium text-primary">¥{{ formatMoney(amount) }}</span>
             </div>
-            <span class="font-medium text-primary">¥{{ formatMoney(amount) }}</span>
-          </div>
-          
-          <div class="space-y-2">
-            <div 
-              v-for="income in getIncomesBySource(source)" 
-              :key="income.id"
-              class="flex items-center justify-between py-2 border-t border-border-light"
-            >
-              <div class="flex items-center gap-2">
-                <span class="text-sm text-text-tertiary">{{ income.date.slice(-5) }}</span>
-                <span class="text-sm text-text-secondary">{{ income.userName }}</span>
+            
+            <div class="space-y-2">
+              <div 
+                v-for="income in getIncomesBySource(source)" 
+                :key="income.id"
+                class="flex items-center justify-between py-2 border-t border-border-light"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-text-tertiary">{{ income.date.slice(-5) }}</span>
+                  <span class="text-sm text-text-secondary">{{ income.userName }}</span>
+                </div>
+                <span class="text-sm text-text-primary">¥{{ formatMoney(income.amount) }}</span>
               </div>
-              <span class="text-sm text-text-primary">¥{{ formatMoney(income.amount) }}</span>
             </div>
           </div>
-        </div>
-        
-        <div v-if="Object.keys(incomeStats.bySource).length === 0" class="text-center py-12">
+        </template>
+        <div v-else class="text-center py-12">
           <p class="text-text-tertiary">本月还没有收入记录</p>
         </div>
       </div>
@@ -271,8 +272,17 @@ const form = reactive({
   notes: ''
 })
 
-const expenseStats = computed(() => expenseStore.getMonthlyStats(currentMonth.value))
-const incomeStats = computed(() => incomeStore.getMonthlyStats(currentMonth.value))
+// 使用方法替代 computed，确保数据刷新
+function getExpenseStats() {
+  return expenseStore.getMonthlyStats(currentMonth.value)
+}
+
+function getIncomeStats() {
+  return incomeStore.getMonthlyStats(currentMonth.value)
+}
+
+const expenseStats = computed(() => getExpenseStats())
+const incomeStats = computed(() => getIncomeStats())
 const balance = computed(() => incomeStats.value.total - expenseStats.value.total)
 const savingsRate = computed(() => incomeStats.value.total > 0 ? (balance.value / incomeStats.value.total) * 100 : 0)
 
