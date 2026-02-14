@@ -31,8 +31,9 @@ export const useAuthStore = defineStore('auth', () => {
   
   // 注册
   async function register(name, password) {
-    // 检查用户名是否已存在
-    const existingUser = users.value.find(u => u.name === name)
+    // 检查用户名是否已存在（重新从数据库获取最新数据）
+    const allUsers = await db.getAll('users')
+    const existingUser = allUsers.find(u => u.name === name)
     if (existingUser) {
       throw new Error('用户名已存在')
     }
@@ -46,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     
     await db.add('users', user)
-    users.value.push(user)
+    users.value = allUsers.concat(user)  // 更新本地缓存
     
     return user
   }
