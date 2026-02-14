@@ -20,52 +20,6 @@
     </header>
     
     <main class="px-6 py-6 space-y-6">
-      <!-- 本月概览卡片 -->
-      <div class="card">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-medium text-text-primary">本月概览</h2>
-          <select 
-            v-model="currentMonth" 
-            class="text-sm text-text-tertiary bg-transparent focus:outline-none"
-          >
-            <option value="2026-02">2026年2月</option>
-            <option value="2026-01">2026年1月</option>
-          </select>
-        </div>
-        
-        <!-- 收支结余 -->
-        <div class="grid grid-cols-3 gap-4 mb-6">
-          <div class="text-center">
-            <p class="text-sm text-text-tertiary mb-1">收入</p>
-            <p class="text-lg font-semibold text-primary">¥{{ formatMoney(incomeStats.total) }}</p>
-          </div>
-          <div class="text-center">
-            <p class="text-sm text-text-tertiary mb-1">支出</p>
-            <p class="text-lg font-semibold text-accent">¥{{ formatMoney(expenseStats.total) }}</p>
-          </div>
-          <div class="text-center">
-            <p class="text-sm text-text-tertiary mb-1">结余</p>
-            <p class="text-lg font-semibold" :class="balance >= 0 ? 'text-primary' : 'text-accent'">
-              ¥{{ formatMoney(balance) }}
-            </p>
-          </div>
-        </div>
-        
-        <!-- 储蓄率 -->
-        <div class="flex items-center justify-between p-4 rounded-xl bg-bg-secondary">
-          <span class="text-sm text-text-secondary">储蓄率</span>
-          <div class="flex items-center gap-3">
-            <div class="w-32 h-2 bg-border-light rounded-full overflow-hidden">
-              <div 
-                class="h-full bg-primary rounded-full transition-all duration-500"
-                :style="{ width: `${savingsRate}%` }"
-              ></div>
-            </div>
-            <span class="text-sm font-medium text-text-primary">{{ savingsRate.toFixed(1) }}%</span>
-          </div>
-        </div>
-      </div>
-      
       <!-- 家庭成员 -->
       <div class="card">
         <h2 class="text-lg font-medium text-text-primary mb-4">家庭成员</h2>
@@ -185,7 +139,7 @@
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          <span class="text-xs mt-1">心理账户</span>
+          <span class="text-xs mt-1">财务目标</span>
         </router-link>
         
         <router-link to="/sync" class="flex flex-col items-center p-2 text-text-tertiary hover:text-primary">
@@ -230,23 +184,6 @@ const formattedDate = computed(() => {
   return format(new Date(), 'yyyy年M月d日 EEEE', { locale: zhCN })
 })
 
-const incomeStats = computed(() => {
-  return incomeStore.getMonthlyStats(currentMonth.value)
-})
-
-const expenseStats = computed(() => {
-  return expenseStore.getMonthlyStats(currentMonth.value)
-})
-
-const balance = computed(() => {
-  return incomeStats.value.total - expenseStats.value.total
-})
-
-const savingsRate = computed(() => {
-  if (incomeStats.value.total === 0) return 0
-  return (balance.value / incomeStats.value.total) * 100
-})
-
 const familyMembers = computed(() => {
   return authStore.getAllUsers()
 })
@@ -266,8 +203,11 @@ function formatMoney(amount) {
 }
 
 function getMemberBalance(memberName) {
-  const income = incomeStats.value.byUser[memberName] || 0
-  const expense = expenseStats.value.byUser[memberName] || 0
+  // 家庭成员卡片需要获取收入和支出统计
+  const incomeStore = useIncomeStore()
+  const expenseStore = useExpenseStore()
+  const income = incomeStore.getMonthlyStats(currentMonth.value).byUser[memberName] || 0
+  const expense = expenseStore.getMonthlyStats(currentMonth.value).byUser[memberName] || 0
   return income - expense
 }
 

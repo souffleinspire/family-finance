@@ -33,16 +33,41 @@
         </button>
       </div>
       
-      <!-- 统计卡片 -->
+      <!-- 本月概览 -->
       <div class="card mb-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-text-tertiary">本月支出</p>
-            <p class="text-2xl font-semibold text-accent">¥{{ formatMoney(monthStats.total) }}</p>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-medium text-text-primary">本月概览</h2>
+        </div>
+        
+        <!-- 收支结余 -->
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="text-center">
+            <p class="text-sm text-text-tertiary mb-1">收入</p>
+            <p class="text-lg font-semibold text-primary">¥{{ formatMoney(incomeStats.total) }}</p>
           </div>
-          <div class="text-right">
-            <p class="text-sm text-text-tertiary">共 {{ monthStats.count }} 笔</p>
-            <p class="text-sm text-text-secondary">平均 ¥{{ formatMoney(avgAmount) }}</p>
+          <div class="text-center">
+            <p class="text-sm text-text-tertiary mb-1">支出</p>
+            <p class="text-lg font-semibold text-accent">¥{{ formatMoney(monthStats.total) }}</p>
+          </div>
+          <div class="text-center">
+            <p class="text-sm text-text-tertiary mb-1">结余</p>
+            <p class="text-lg font-semibold" :class="incomeStats.total - monthStats.total >= 0 ? 'text-primary' : 'text-accent'">
+              ¥{{ formatMoney(incomeStats.total - monthStats.total) }}
+            </p>
+          </div>
+        </div>
+        
+        <!-- 储蓄率 -->
+        <div class="flex items-center justify-between p-3 rounded-xl bg-bg-secondary">
+          <span class="text-sm text-text-secondary">储蓄率</span>
+          <div class="flex items-center gap-3">
+            <div class="w-24 h-2 bg-border-light rounded-full overflow-hidden">
+              <div 
+                class="h-full bg-primary rounded-full transition-all duration-500"
+                :style="{ width: `${savingsRate}%` }"
+              ></div>
+            </div>
+            <span class="text-sm font-medium text-text-primary">{{ savingsRate.toFixed(1) }}%</span>
           </div>
         </div>
       </div>
@@ -169,9 +194,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { format, subMonths, addMonths } from 'date-fns'
 import { useExpenseStore } from '@/stores/expenses'
+import { useIncomeStore } from '@/stores/incomes'
 import { useAuthStore } from '@/stores/auth'
 
 const expenseStore = useExpenseStore()
+const incomeStore = useIncomeStore()
 const authStore = useAuthStore()
 
 const currentMonth = ref(format(new Date(), 'yyyy-MM'))
@@ -186,6 +213,19 @@ const form = reactive({
 
 const monthStats = computed(() => {
   return expenseStore.getMonthlyStats(currentMonth.value)
+})
+
+const incomeStats = computed(() => {
+  return incomeStore.getMonthlyStats(currentMonth.value)
+})
+
+const balance = computed(() => {
+  return incomeStats.value.total - monthStats.value.total
+})
+
+const savingsRate = computed(() => {
+  if (incomeStats.value.total === 0) return 0
+  return (balance.value / incomeStats.value.total) * 100
 })
 
 const avgAmount = computed(() => {
@@ -229,6 +269,9 @@ async function handleAddExpense() {
 }
 
 onMounted(async () => {
-  await expenseStore.init()
+  await Promise.all([
+    expenseStore.init(),
+    incomeStore.init()
+  ])
 })
 </script>
