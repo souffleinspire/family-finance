@@ -223,30 +223,40 @@ const netAssets = computed(() => totalAssets.value - totalLiabilities.value)
 const recentRecords = computed(() => {
   const currentMonth = format(new Date(), 'yyyy-MM')
   
+  // 只显示当月的收支记录
   const expenses = expenseStore.expenses
-    .filter(e => e.date.startsWith(currentMonth))
+    .filter(e => e.date && e.date.startsWith(currentMonth))
     .map(e => ({
     ...e,
     type: 'expense',
     category: '支出',
-    name: e.type
+    name: e.type,
+    displayDate: e.date
   }))
+  
   const incomes = incomeStore.incomes
-    .filter(i => i.date.startsWith(currentMonth))
+    .filter(i => i.date && i.date.startsWith(currentMonth))
     .map(i => ({
     ...i,
     type: 'income',
     category: '收入',
-    name: i.source
+    name: i.source,
+    displayDate: i.date
   }))
+  
+  // 资产没有日期，显示创建时间
   const assets = assetStore.assets.map(a => ({
     ...a,
     type: 'asset',
-    category: a.category
+    category: a.category,
+    name: a.name,
+    displayDate: a.createdAt ? a.createdAt.split('T')[0] : new Date().toISOString().split('T')[0]
   }))
   
+  console.log('Recent records:', { expenses, incomes, assets })
+  
   return [...expenses, ...incomes, ...assets]
-    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+    .sort((a, b) => new Date(b.displayDate) - new Date(a.displayDate))
     .slice(0, 10)
 })
 
