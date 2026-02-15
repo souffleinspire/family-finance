@@ -38,12 +38,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/assets/add',
-    name: 'AddAsset',
-    component: () => import('@/views/AddAssetView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/SettingsView.vue'),

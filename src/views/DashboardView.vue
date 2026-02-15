@@ -20,35 +20,66 @@
     </header>
     
     <main class="px-6 py-6 space-y-6">
+      <!-- 家庭总资产 -->
+      <div class="card">
+        <h2 class="text-lg font-medium text-text-primary mb-4">家庭总资产</h2>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="text-center p-4 rounded-xl bg-bg-secondary">
+            <p class="text-sm text-text-tertiary mb-1">总资产</p>
+            <p class="text-xl font-semibold text-primary">¥{{ formatMoney(totalAssets) }}</p>
+          </div>
+          <div class="text-center p-4 rounded-xl bg-bg-secondary">
+            <p class="text-sm text-text-tertiary mb-1">净资产</p>
+            <p class="text-xl font-semibold" :class="netAssets >= 0 ? 'text-primary' : 'text-accent'">
+              ¥{{ formatMoney(netAssets) }}
+            </p>
+          </div>
+          <div class="text-center p-4 rounded-xl bg-bg-secondary">
+            <p class="text-sm text-text-tertiary mb-1">总负债</p>
+            <p class="text-xl font-semibold text-accent">¥{{ formatMoney(totalLiabilities) }}</p>
+          </div>
+        </div>
+      </div>
+      
       <!-- 最近记录 -->
       <div class="card">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-medium text-text-primary">最近记录</h2>
-          <router-link to="/expenses" class="text-sm text-primary hover:text-primary-dark">
-            查看全部 →
-          </router-link>
         </div>
         
-        <div v-if="recentExpenses.length === 0" class="text-center py-8">
-          <p class="text-text-tertiary">还没有记录，去记一笔吧</p>
+        <div v-if="recentRecords.length === 0" class="text-center py-8">
+          <p class="text-text-tertiary">还没有记录</p>
         </div>
         
         <div v-else class="space-y-3">
           <div 
-            v-for="expense in recentExpenses" 
-            :key="expense.id"
+            v-for="record in recentRecords" 
+            :key="record.id"
             class="flex items-center justify-between p-3 rounded-xl hover:bg-bg-secondary transition-colors"
           >
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                <span class="text-accent text-sm">支</span>
+              <div 
+                class="w-10 h-10 rounded-xl flex items-center justify-center"
+                :class="record.category === '负债' ? 'bg-accent/20' : 'bg-primary/20'"
+              >
+                <span 
+                  class="text-sm"
+                  :class="record.category === '负债' ? 'text-accent' : 'text-primary'"
+                >
+                  {{ record.category === '负债' ? '负' : (record.type === 'income' ? '收' : '支') }}
+                </span>
               </div>
               <div>
-                <p class="font-medium text-text-primary">{{ expense.type }}</p>
-                <p class="text-xs text-text-tertiary">{{ expense.date }} · {{ expense.userName }}</p>
+                <p class="font-medium text-text-primary">{{ record.name || record.type || record.source }}</p>
+                <p class="text-xs text-text-tertiary">{{ record.date }} · {{ record.userName }}</p>
               </div>
             </div>
-            <span class="font-medium text-accent">-¥{{ formatMoney(expense.amount) }}</span>
+            <span 
+              class="font-medium"
+              :class="record.category === '负债' ? 'text-accent' : (record.type === 'income' ? 'text-primary' : 'text-accent')"
+            >
+              {{ record.type === 'income' ? '+' : '-' }}¥{{ formatMoney(record.amount) }}
+            </span>
           </div>
         </div>
       </div>
@@ -88,51 +119,179 @@
     </nav>
     
     <!-- 浮动添加按钮 -->
-    <router-link 
-      to="/assets/add" 
+    <button 
+      @click="showAddAssetModal = true"
       class="fixed bottom-20 right-6 w-14 h-14 rounded-full gradient-accent flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all"
     >
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
-    </router-link>
+    </button>
+    
+    <!-- 添加资产弹窗 -->
+    <div v-if="showAddAssetModal" class="fixed inset-0 z-50 flex items-end justify-center bg-black/30">
+      <div class="w-full max-w-md bg-bg-tertiary rounded-t-3xl shadow-soft-lg p-6 animate-slide-up">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-text-primary">添加资产</h2>
+          <button @click="showAddAssetModal = false" class="p-2 rounded-full hover:bg-bg-secondary">
+            <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <form @submit.prevent="handleAddAsset" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">名称</label>
+            <input v-model="assetForm.name" type="text" class="input" placeholder="如：工资卡、房贷" required />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">类别</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button 
+                v-for="cat in assetCategories" 
+                :key="cat"
+                type="button"
+                @click="assetForm.category = cat"
+                class="py-3 rounded-xl text-sm font-medium transition-colors"
+                :class="assetForm.category === cat ? 'bg-primary text-white' : 'bg-bg-secondary text-text-secondary'"
+              >
+                {{ cat }}
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-text-secondary mb-2">金额</label>
+            <input v-model.number="assetForm.amount" type="number" class="input" placeholder="0" required />
+          </div>
+          
+          <div class="flex gap-3 pt-4">
+            <button type="button" @click="showAddAssetModal = false" class="btn-secondary flex-1">取消</button>
+            <button type="submit" class="btn-primary flex-1">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useExpenseStore } from '@/stores/expenses'
+import { useIncomeStore } from '@/stores/incomes'
+import { useAssetStore } from '@/stores/assets'
 
 const authStore = useAuthStore()
 const expenseStore = useExpenseStore()
+const incomeStore = useIncomeStore()
+const assetStore = useAssetStore()
 
 const loading = ref(true)
+const showAddAssetModal = ref(false)
+const assetCategories = ['流动资金', '固定资产', '投资理财', '负债']
+const assetForm = reactive({
+  name: '',
+  category: '流动资金',
+  amount: ''
+})
 
 const formattedDate = computed(() => {
   return format(new Date(), 'yyyy年M月d日 EEEE', { locale: zhCN })
 })
 
-const recentExpenses = computed(() => {
-  return expenseStore.expenses
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5)
+// 资产计算
+const totalAssets = computed(() => {
+  return assetStore.assets
+    .filter(a => a.category !== '负债')
+    .reduce((sum, a) => sum + (a.amount || 0), 0)
+})
+
+const totalLiabilities = computed(() => {
+  return assetStore.assets
+    .filter(a => a.category === '负债')
+    .reduce((sum, a) => sum + (a.amount || 0), 0)
+})
+
+const netAssets = computed(() => totalAssets.value - totalLiabilities.value)
+
+// 最近记录（合并收支和资产）
+const recentRecords = computed(() => {
+  const currentMonth = format(new Date(), 'yyyy-MM')
+  
+  const expenses = expenseStore.expenses
+    .filter(e => e.date.startsWith(currentMonth))
+    .map(e => ({
+    ...e,
+    type: 'expense',
+    category: '支出',
+    name: e.type
+  }))
+  const incomes = incomeStore.incomes
+    .filter(i => i.date.startsWith(currentMonth))
+    .map(i => ({
+    ...i,
+    type: 'income',
+    category: '收入',
+    name: i.source
+  }))
+  const assets = assetStore.assets.map(a => ({
+    ...a,
+    type: 'asset',
+    category: a.category
+  }))
+  
+  return [...expenses, ...incomes, ...assets]
+    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+    .slice(0, 10)
 })
 
 function formatMoney(amount) {
   return Math.round(amount).toLocaleString()
 }
 
+async function handleAddAsset() {
+  if (!authStore.currentUser || !assetForm.amount) return
+  
+  await assetStore.addAsset({
+    userId: authStore.currentUser.id,
+    userName: authStore.currentUser.name,
+    name: assetForm.name,
+    category: assetForm.category,
+    amount: assetForm.amount
+  })
+  
+  // 重置表单并关闭
+  assetForm.name = ''
+  assetForm.category = '流动资金'
+  assetForm.amount = ''
+  showAddAssetModal.value = false
+}
+
 onMounted(async () => {
   try {
     await Promise.all([
       authStore.init(),
-      expenseStore.init()
+      expenseStore.init(),
+      incomeStore.init(),
+      assetStore.init()
     ])
   } finally {
     loading.value = false
   }
 })
 </script>
+
+<style scoped>
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+</style>
